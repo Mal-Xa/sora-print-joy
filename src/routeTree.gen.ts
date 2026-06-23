@@ -24,6 +24,9 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppPassportRouteImport } from './routes/app.passport'
 import { Route as AppFilesRouteImport } from './routes/app.files'
+import { Route as AdminPrintersRouteImport } from './routes/admin.printers'
+import { Route as AdminPricingRouteImport } from './routes/admin.pricing'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AppOrdersIndexRouteImport } from './routes/app.orders.index'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin.orders.index'
 import { Route as AppPassportSavedRouteImport } from './routes/app.passport.saved'
@@ -106,6 +109,21 @@ const AppFilesRoute = AppFilesRouteImport.update({
   path: '/files',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminPrintersRoute = AdminPrintersRouteImport.update({
+  id: '/printers',
+  path: '/printers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPricingRoute = AdminPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AppOrdersIndexRoute = AppOrdersIndexRouteImport.update({
   id: '/orders/',
   path: '/orders/',
@@ -148,6 +166,9 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/terms': typeof TermsRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/pricing': typeof AdminPricingRoute
+  '/admin/printers': typeof AdminPrintersRoute
   '/app/files': typeof AppFilesRoute
   '/app/passport': typeof AppPassportRouteWithChildren
   '/app/profile': typeof AppProfileRoute
@@ -169,6 +190,9 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/terms': typeof TermsRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/pricing': typeof AdminPricingRoute
+  '/admin/printers': typeof AdminPrintersRoute
   '/app/files': typeof AppFilesRoute
   '/app/passport': typeof AppPassportRouteWithChildren
   '/app/profile': typeof AppProfileRoute
@@ -193,6 +217,9 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/terms': typeof TermsRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/pricing': typeof AdminPricingRoute
+  '/admin/printers': typeof AdminPrintersRoute
   '/app/files': typeof AppFilesRoute
   '/app/passport': typeof AppPassportRouteWithChildren
   '/app/profile': typeof AppProfileRoute
@@ -218,6 +245,9 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/register'
     | '/terms'
+    | '/admin/analytics'
+    | '/admin/pricing'
+    | '/admin/printers'
     | '/app/files'
     | '/app/passport'
     | '/app/profile'
@@ -239,6 +269,9 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/register'
     | '/terms'
+    | '/admin/analytics'
+    | '/admin/pricing'
+    | '/admin/printers'
     | '/app/files'
     | '/app/passport'
     | '/app/profile'
@@ -262,6 +295,9 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/register'
     | '/terms'
+    | '/admin/analytics'
+    | '/admin/pricing'
+    | '/admin/printers'
     | '/app/files'
     | '/app/passport'
     | '/app/profile'
@@ -395,6 +431,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFilesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/printers': {
+      id: '/admin/printers'
+      path: '/printers'
+      fullPath: '/admin/printers'
+      preLoaderRoute: typeof AdminPrintersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/pricing': {
+      id: '/admin/pricing'
+      path: '/pricing'
+      fullPath: '/admin/pricing'
+      preLoaderRoute: typeof AdminPricingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/app/orders/': {
       id: '/app/orders/'
       path: '/orders'
@@ -441,12 +498,18 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminPricingRoute: typeof AdminPricingRoute
+  AdminPrintersRoute: typeof AdminPrintersRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminOrdersIdRoute: typeof AdminOrdersIdRoute
   AdminOrdersIndexRoute: typeof AdminOrdersIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminPricingRoute: AdminPricingRoute,
+  AdminPrintersRoute: AdminPrintersRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminOrdersIdRoute: AdminOrdersIdRoute,
   AdminOrdersIndexRoute: AdminOrdersIndexRoute,
