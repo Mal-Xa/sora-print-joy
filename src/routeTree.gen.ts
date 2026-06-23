@@ -16,16 +16,20 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppPassportRouteImport } from './routes/app.passport'
 import { Route as AppFilesRouteImport } from './routes/app.files'
 import { Route as AppOrdersIndexRouteImport } from './routes/app.orders.index'
+import { Route as AdminOrdersIndexRouteImport } from './routes/admin.orders.index'
 import { Route as AppPassportSavedRouteImport } from './routes/app.passport.saved'
 import { Route as AppOrdersNewRouteImport } from './routes/app.orders.new'
 import { Route as AppOrdersIdRouteImport } from './routes/app.orders.$id'
+import { Route as AdminOrdersIdRouteImport } from './routes/admin.orders.$id'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -62,6 +66,11 @@ const AppRoute = AppRouteImport.update({
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -76,6 +85,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
@@ -97,6 +111,11 @@ const AppOrdersIndexRoute = AppOrdersIndexRouteImport.update({
   path: '/orders/',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminOrdersIndexRoute = AdminOrdersIndexRouteImport.update({
+  id: '/orders/',
+  path: '/orders/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AppPassportSavedRoute = AppPassportSavedRouteImport.update({
   id: '/saved',
   path: '/saved',
@@ -112,10 +131,16 @@ const AppOrdersIdRoute = AppOrdersIdRouteImport.update({
   path: '/orders/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminOrdersIdRoute = AdminOrdersIdRouteImport.update({
+  id: '/orders/$id',
+  path: '/orders/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
   '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -126,10 +151,13 @@ export interface FileRoutesByFullPath {
   '/app/files': typeof AppFilesRoute
   '/app/passport': typeof AppPassportRouteWithChildren
   '/app/profile': typeof AppProfileRoute
+  '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
+  '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/app/orders/$id': typeof AppOrdersIdRoute
   '/app/orders/new': typeof AppOrdersNewRoute
   '/app/passport/saved': typeof AppPassportSavedRoute
+  '/admin/orders/': typeof AdminOrdersIndexRoute
   '/app/orders/': typeof AppOrdersIndexRoute
 }
 export interface FileRoutesByTo {
@@ -144,16 +172,20 @@ export interface FileRoutesByTo {
   '/app/files': typeof AppFilesRoute
   '/app/passport': typeof AppPassportRouteWithChildren
   '/app/profile': typeof AppProfileRoute
+  '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
+  '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/app/orders/$id': typeof AppOrdersIdRoute
   '/app/orders/new': typeof AppOrdersNewRoute
   '/app/passport/saved': typeof AppPassportSavedRoute
+  '/admin/orders': typeof AdminOrdersIndexRoute
   '/app/orders': typeof AppOrdersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
   '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -164,10 +196,13 @@ export interface FileRoutesById {
   '/app/files': typeof AppFilesRoute
   '/app/passport': typeof AppPassportRouteWithChildren
   '/app/profile': typeof AppProfileRoute
+  '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
+  '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/app/orders/$id': typeof AppOrdersIdRoute
   '/app/orders/new': typeof AppOrdersNewRoute
   '/app/passport/saved': typeof AppPassportSavedRoute
+  '/admin/orders/': typeof AdminOrdersIndexRoute
   '/app/orders/': typeof AppOrdersIndexRoute
 }
 export interface FileRouteTypes {
@@ -175,6 +210,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/admin'
     | '/app'
     | '/contact'
     | '/forgot-password'
@@ -185,10 +221,13 @@ export interface FileRouteTypes {
     | '/app/files'
     | '/app/passport'
     | '/app/profile'
+    | '/admin/'
     | '/app/'
+    | '/admin/orders/$id'
     | '/app/orders/$id'
     | '/app/orders/new'
     | '/app/passport/saved'
+    | '/admin/orders/'
     | '/app/orders/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -203,15 +242,19 @@ export interface FileRouteTypes {
     | '/app/files'
     | '/app/passport'
     | '/app/profile'
+    | '/admin'
     | '/app'
+    | '/admin/orders/$id'
     | '/app/orders/$id'
     | '/app/orders/new'
     | '/app/passport/saved'
+    | '/admin/orders'
     | '/app/orders'
   id:
     | '__root__'
     | '/'
     | '/about'
+    | '/admin'
     | '/app'
     | '/contact'
     | '/forgot-password'
@@ -222,16 +265,20 @@ export interface FileRouteTypes {
     | '/app/files'
     | '/app/passport'
     | '/app/profile'
+    | '/admin/'
     | '/app/'
+    | '/admin/orders/$id'
     | '/app/orders/$id'
     | '/app/orders/new'
     | '/app/passport/saved'
+    | '/admin/orders/'
     | '/app/orders/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AppRoute: typeof AppRouteWithChildren
   ContactRoute: typeof ContactRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -292,6 +339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about': {
       id: '/about'
       path: '/about'
@@ -312,6 +366,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/app/profile': {
       id: '/app/profile'
@@ -341,6 +402,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrdersIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/orders/': {
+      id: '/admin/orders/'
+      path: '/orders'
+      fullPath: '/admin/orders/'
+      preLoaderRoute: typeof AdminOrdersIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/app/passport/saved': {
       id: '/app/passport/saved'
       path: '/saved'
@@ -362,8 +430,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrdersIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/orders/$id': {
+      id: '/admin/orders/$id'
+      path: '/orders/$id'
+      fullPath: '/admin/orders/$id'
+      preLoaderRoute: typeof AdminOrdersIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminOrdersIdRoute: typeof AdminOrdersIdRoute
+  AdminOrdersIndexRoute: typeof AdminOrdersIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminIndexRoute: AdminIndexRoute,
+  AdminOrdersIdRoute: AdminOrdersIdRoute,
+  AdminOrdersIndexRoute: AdminOrdersIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AppPassportRouteChildren {
   AppPassportSavedRoute: typeof AppPassportSavedRoute
@@ -402,6 +491,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AdminRoute: AdminRouteWithChildren,
   AppRoute: AppRouteWithChildren,
   ContactRoute: ContactRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
