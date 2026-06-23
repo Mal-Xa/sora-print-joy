@@ -32,7 +32,9 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <nav className="flex flex-1 flex-col gap-1 p-3">
       {items.map((it) => {
-        const active = it.exact ? pathname === it.to : pathname === it.to || pathname.startsWith(it.to + "/");
+        let active = it.exact ? pathname === it.to : pathname === it.to || pathname.startsWith(it.to + "/");
+        // Don't activate "My Orders" while on the New Order wizard
+        if (it.to === "/app/orders" && pathname.startsWith("/app/orders/new")) active = false;
         const Icon = it.icon;
         return (
           <Link
