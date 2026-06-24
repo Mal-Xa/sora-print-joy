@@ -213,6 +213,61 @@ function NewOrderPage() {
             </div>
           )}
 
+          {step === 6 && (
+            <div className="space-y-4">
+              <SectionTitle title="Payment" subtitle="Pick how you want to pay. This is a demo — no money moves." />
+              <Card>
+                <CardContent className="space-y-4 p-5">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    {[
+                      { id: "upi" as const, icon: Smartphone, label: "UPI", hint: "GPay, PhonePe, Paytm" },
+                      { id: "card" as const, icon: CreditCard, label: "Card", hint: "Credit / Debit" },
+                      { id: "cod" as const, icon: Wallet, label: "Pay at pickup", hint: "Cash on collection" },
+                    ].map((m) => (
+                      <button
+                        type="button"
+                        key={m.id}
+                        onClick={() => setPayment(m.id)}
+                        className={cn(
+                          "rounded-xl border p-4 text-left transition",
+                          payment === m.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40",
+                        )}
+                      >
+                        <m.icon className="mb-2 h-5 w-5 text-primary" />
+                        <p className="font-medium">{m.label}</p>
+                        <p className="text-xs text-muted-foreground">{m.hint}</p>
+                      </button>
+                    ))}
+                  </div>
+
+                  {payment === "upi" && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="upi">UPI ID</Label>
+                      <Input id="upi" placeholder="yourname@oksbi" value={upiId} onChange={(e) => setUpiId(e.target.value)} />
+                    </div>
+                  )}
+                  {payment === "card" && (
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div className="space-y-1.5 sm:col-span-2">
+                        <Label htmlFor="card">Card number</Label>
+                        <Input id="card" placeholder="•••• •••• •••• 4242" value={cardLast4} onChange={(e) => setCardLast4(e.target.value)} maxLength={19} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="exp">Expiry</Label>
+                        <Input id="exp" placeholder="MM/YY" />
+                      </div>
+                    </div>
+                  )}
+                  {payment === "cod" && (
+                    <p className="rounded-lg bg-muted p-3 text-xs text-muted-foreground">
+                      You'll pay <span className="font-semibold text-foreground">{formatINR(breakdown.total)}</span> in cash when you collect your order.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           <div className="flex items-center justify-between gap-3">
             <Button
               type="button"
@@ -222,7 +277,7 @@ function NewOrderPage() {
             >
               <ArrowLeft className="mr-1 h-4 w-4" /> Back
             </Button>
-            {step < 5 ? (
+            {step < 6 ? (
               <Button
                 type="button"
                 onClick={() => setStep(step + 1)}
@@ -231,9 +286,9 @@ function NewOrderPage() {
                 Continue <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             ) : (
-              <Button onClick={() => submit.mutate()} disabled={submit.isPending}>
+              <Button onClick={() => submit.mutate()} disabled={submit.isPending || !canSubmit()}>
                 <Check className="mr-1 h-4 w-4" />
-                {submit.isPending ? "Placing…" : "Submit order"}
+                {submit.isPending ? "Processing…" : `Pay ${formatINR(breakdown.total)} & place order`}
               </Button>
             )}
           </div>
