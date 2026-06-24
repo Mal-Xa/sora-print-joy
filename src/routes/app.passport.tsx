@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { Camera, Crop, Move, RotateCw, ZoomIn, Image as ImageIcon, Plus, Save } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Camera, RotateCw, RotateCcw, Image as ImageIcon, Plus, Save, Maximize2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { passportService } from "@/services/passportService";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,10 +18,10 @@ export const Route = createFileRoute("/app/passport")({
 
 type Template = "passport" | "visa" | "id";
 
-const TEMPLATES: { id: Template; label: string; size: string }[] = [
-  { id: "passport", label: "Passport Photo", size: "35×45 mm" },
-  { id: "visa", label: "Visa Photo", size: "51×51 mm" },
-  { id: "id", label: "ID Photo", size: "25×35 mm" },
+const TEMPLATES: { id: Template; label: string; size: string; ratio: number }[] = [
+  { id: "passport", label: "Passport Photo", size: "35×45 mm", ratio: 35 / 45 },
+  { id: "visa", label: "Visa Photo", size: "51×51 mm", ratio: 1 },
+  { id: "id", label: "ID Photo", size: "25×35 mm", ratio: 25 / 35 },
 ];
 
 function PassportPage() {
@@ -28,20 +29,36 @@ function PassportPage() {
   const qc = useQueryClient();
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [template, setTemplate] = useState<Template>("passport");
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [croppedUrl, setCroppedUrl] = useState<string | null>(null);
+
   const { data: sheets } = useQuery({
     queryKey: ["passport", user?.id],
     queryFn: () => passportService.list(user?.id),
     enabled: Boolean(user),
   });
 
+  // Reset transforms whenever the photo or template changes
+  useEffect(() => {
+    setZoom(1);
+    setRotation(0);
+    setOffset({ x: 0, y: 0 });
+  }, [photoUrl, template]);
+
+  const activeTemplate = TEMPLATES.find((t) => t.id === template)!;
+
   const save = useMutation({
-    mutationFn: () =>
-      passportService.save({
+    mutationFn: async () => {
+      const url = croppedUrl ?? photoUrl ?? undefined;
+      return passportService.save({
         userId: user!.id,
         template,
-        photoUrl: photoUrl ?? undefined,
+        photoUrl: url,
         photosPerSheet: 9,
-      }),
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["passport"] });
       toast.success("Sheet saved to your library");
@@ -72,7 +89,10 @@ function PassportPage() {
                   className="sr-only"
                   onChange={(e) => {
                     const f = e.target.files?.[0];
-                    if (f) setPhotoUrl(URL.createObjectURL(f));
+                    if (f) {
+                      setPhotoUrl(URL.createObjectURL(f));
+                      setCroppedUrl(null);
+                    }
                   }}
                 />
                 <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary">
@@ -90,35 +110,73 @@ function PassportPage() {
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Editor</h3>
                 <div className="flex gap-1">
-                  {[
-                    { icon: Crop, label: "Crop" },
-                    { icon: ZoomIn, label: "Zoom" },
-                    { icon: Move, label: "Move" },
-                    { icon: RotateCw, label: "Rotate" },
-                  ].map((t) => (
-                    <Button
-                      key={t.label}
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      title={`${t.label} (coming soon)`}
-                      onClick={() => toast.message(`${t.label} controls coming soon`)}
-                    >
-                      <t.icon className="h-4 w-4" />
-                    </Button>
-                  ))}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    title="Rotate left"
+                    disabled={!photoUrl}
+                    onClick={() => setRotation((r) => r - 90)}
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    title="Rotate right"
+                    disabled={!photoUrl}
+                    onClick={() => setRotation((r) => r + 90)}
+                  >
+                    <RotateCw className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    title="Reset"
+                    disabled={!photoUrl}
+                    onClick={() => {
+                      setZoom(1);
+                      setRotation(0);
+                      setOffset({ x: 0, y: 0 });
+                    }}
+                  >
+                    <Maximize2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-              <div className="grid aspect-[4/3] place-items-center overflow-hidden rounded-xl bg-muted">
-                {photoUrl ? (
-                  <img src={photoUrl} alt="Uploaded preview" className="h-full w-full object-contain" />
-                ) : (
-                  <div className="text-center text-sm text-muted-foreground">
-                    <ImageIcon className="mx-auto h-8 w-8" />
-                    <p className="mt-2">Upload a photo to start editing</p>
+
+              <PhotoEditor
+                photoUrl={photoUrl}
+                zoom={zoom}
+                rotation={rotation}
+                offset={offset}
+                onOffsetChange={setOffset}
+                aspectRatio={activeTemplate.ratio}
+                onCropChange={setCroppedUrl}
+              />
+
+              {photoUrl && (
+                <div className="space-y-3 pt-1">
+                  <div>
+                    <div className="mb-1 flex items-center justify-between text-xs">
+                      <span className="font-medium">Zoom</span>
+                      <span className="text-muted-foreground">{zoom.toFixed(2)}×</span>
+                    </div>
+                    <Slider
+                      value={[zoom]}
+                      min={0.5}
+                      max={3}
+                      step={0.01}
+                      onValueChange={(v) => setZoom(v[0])}
+                    />
                   </div>
-                )}
-              </div>
+                  <p className="text-xs text-muted-foreground">
+                    Drag the photo to reposition · use the slider to zoom · rotate buttons for orientation.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -156,7 +214,7 @@ function PassportPage() {
                 <h3 className="font-semibold">Sheet preview</h3>
                 <p className="text-xs text-muted-foreground">4×6 inch · 9 photos · cutting guides</p>
               </div>
-              <SheetPreview photoUrl={photoUrl} />
+              <SheetPreview photoUrl={croppedUrl ?? photoUrl} ratio={activeTemplate.ratio} />
             </CardContent>
           </Card>
           <div className="space-y-2">
@@ -178,7 +236,140 @@ function PassportPage() {
   );
 }
 
-function SheetPreview({ photoUrl }: { photoUrl: string | null }) {
+// ---------------- Photo editor with drag + canvas crop ----------------
+
+interface PhotoEditorProps {
+  photoUrl: string | null;
+  zoom: number;
+  rotation: number;
+  offset: { x: number; y: number };
+  onOffsetChange: (o: { x: number; y: number }) => void;
+  aspectRatio: number;
+  onCropChange: (url: string | null) => void;
+}
+
+function PhotoEditor({ photoUrl, zoom, rotation, offset, onOffsetChange, aspectRatio, onCropChange }: PhotoEditorProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const dragRef = useRef<{ startX: number; startY: number; ox: number; oy: number } | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  // Regenerate cropped image whenever inputs change
+  useEffect(() => {
+    if (!photoUrl || !loaded) {
+      onCropChange(null);
+      return;
+    }
+    const container = containerRef.current;
+    const img = imgRef.current;
+    if (!container || !img) return;
+
+    const rect = container.getBoundingClientRect();
+    // Crop window is centered, with the configured aspect ratio, height-fit
+    const cropH = rect.height * 0.9;
+    const cropW = cropH * aspectRatio;
+    const cropX = (rect.width - cropW) / 2;
+    const cropY = (rect.height - cropH) / 2;
+
+    // Render the visible container into a canvas at output resolution
+    const outH = 600;
+    const outW = Math.round(outH * aspectRatio);
+    const canvas = document.createElement("canvas");
+    canvas.width = outW;
+    canvas.height = outH;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, outW, outH);
+
+    // Compute base scale to "contain" the image in the container, then apply zoom
+    const baseScale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
+    const scale = baseScale * zoom;
+    const drawW = img.naturalWidth * scale;
+    const drawH = img.naturalHeight * scale;
+
+    // Map crop window coords -> output canvas coords
+    const sx = outW / cropW;
+    const sy = outH / cropH;
+
+    ctx.save();
+    // Translate origin to where center of container is in the crop space
+    const centerX = rect.width / 2 - cropX;
+    const centerY = rect.height / 2 - cropY;
+    ctx.translate(centerX * sx, centerY * sy);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.translate(offset.x * sx, offset.y * sy);
+    ctx.drawImage(img, -drawW / 2 * sx, -drawH / 2 * sy, drawW * sx, drawH * sy);
+    ctx.restore();
+
+    onCropChange(canvas.toDataURL("image/jpeg", 0.9));
+  }, [photoUrl, loaded, zoom, rotation, offset, aspectRatio, onCropChange]);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (!photoUrl) return;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    dragRef.current = { startX: e.clientX, startY: e.clientY, ox: offset.x, oy: offset.y };
+  };
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    onOffsetChange({ x: dragRef.current.ox + dx, y: dragRef.current.oy + dy });
+  };
+  const handlePointerUp = () => {
+    dragRef.current = null;
+  };
+
+  // Crop overlay size (matches crop math above visually)
+  const cropHeightPct = 90;
+  const cropWidthPct = cropHeightPct * aspectRatio * (3 / 4); // container is 4:3, so width % = (h% * ratio) / (w/h)
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative grid aspect-[4/3] place-items-center overflow-hidden rounded-xl bg-muted touch-none select-none"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      style={{ cursor: photoUrl ? "grab" : "default" }}
+    >
+      {photoUrl ? (
+        <>
+          <img
+            ref={imgRef}
+            src={photoUrl}
+            alt="Editing"
+            onLoad={() => setLoaded(true)}
+            draggable={false}
+            className="max-h-full max-w-full object-contain pointer-events-none"
+            style={{
+              transform: `translate(${offset.x}px, ${offset.y}px) rotate(${rotation}deg) scale(${zoom})`,
+              transformOrigin: "center",
+              transition: dragRef.current ? "none" : "transform 60ms linear",
+            }}
+          />
+          {/* Crop frame */}
+          <div
+            className="pointer-events-none absolute rounded-md border-2 border-primary/90 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]"
+            style={{
+              height: `${cropHeightPct}%`,
+              width: `${cropWidthPct}%`,
+            }}
+          />
+        </>
+      ) : (
+        <div className="text-center text-sm text-muted-foreground">
+          <ImageIcon className="mx-auto h-8 w-8" />
+          <p className="mt-2">Upload a photo to start editing</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SheetPreview({ photoUrl, ratio }: { photoUrl: string | null; ratio: number }) {
   return (
     <div className="mx-auto aspect-[4/6] w-full max-w-[240px] rounded-md border-2 border-dashed border-muted-foreground/40 bg-card p-2">
       <div className="grid h-full grid-cols-3 grid-rows-3 gap-1">
@@ -186,6 +377,7 @@ function SheetPreview({ photoUrl }: { photoUrl: string | null }) {
           <div
             key={i}
             className="overflow-hidden rounded-sm border border-dashed border-muted-foreground/40 bg-muted"
+            style={{ aspectRatio: ratio }}
           >
             {photoUrl ? (
               <img src={photoUrl} alt="" className="h-full w-full object-cover" />

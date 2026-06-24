@@ -1,7 +1,7 @@
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const labels = ["Files", "Print", "Services", "Notes", "Review"];
+const labels = ["Files", "Print", "Services", "Notes", "Review", "Payment"];
 
 export function WizardStepper({ step, onStep }: { step: number; onStep?: (n: number) => void }) {
   return (

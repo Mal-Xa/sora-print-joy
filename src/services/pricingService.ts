@@ -1,4 +1,4 @@
-import { db, delay } from "@/lib/mockDb";
+import { db, delay, persistDb } from "@/lib/mockDb";
 import type { Pricing } from "@/types";
 
 export { computePriceBreakdown, computeOrderTotal } from "@/lib/pricing";
@@ -10,6 +10,7 @@ export const pricingService = {
   },
   async update(next: Pricing): Promise<Pricing> {
     db.pricing = { ...next };
+    persistDb();
     return delay({ ...db.pricing }, 200);
   },
 };

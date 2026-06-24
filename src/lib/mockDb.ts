@@ -254,6 +254,67 @@ export const db = {
   pricing: { ...defaultPricing },
 };
 
+// ---- localStorage persistence (mock backend survives reloads) ----
+const PERSIST_KEY = "sora.db.v1";
+
+type PersistShape = {
+  files: StoredFile[];
+  orders: Order[];
+  passportSheets: PassportSheet[];
+  printers: Printer[];
+  printQueue: PrintJob[];
+  pricing: Pricing;
+};
+
+function stripFileUrls(files: StoredFile[]): StoredFile[] {
+  // object URLs are not valid after reload — drop them
+  return files.map(({ url: _url, ...rest }) => rest);
+}
+
+if (typeof window !== "undefined") {
+  try {
+    const raw = window.localStorage.getItem(PERSIST_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<PersistShape>;
+      if (parsed.files) db.files = parsed.files;
+      if (parsed.orders) db.orders = parsed.orders;
+      if (parsed.passportSheets) db.passportSheets = parsed.passportSheets;
+      if (parsed.printers) db.printers = parsed.printers;
+      if (parsed.printQueue) db.printQueue = parsed.printQueue;
+      if (parsed.pricing) db.pricing = parsed.pricing;
+    }
+  } catch {
+    /* ignore corrupt cache */
+  }
+}
+
+export function persistDb(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const snapshot: PersistShape = {
+      files: stripFileUrls(db.files),
+      orders: db.orders.map((o) => ({ ...o, files: stripFileUrls(o.files) })),
+      passportSheets: db.passportSheets,
+      printers: db.printers,
+      printQueue: db.printQueue,
+      pricing: db.pricing,
+    };
+    window.localStorage.setItem(PERSIST_KEY, JSON.stringify(snapshot));
+  } catch {
+    /* quota exceeded — silently drop */
+  }
+}
+
+export function resetDb(): void {
+  db.files = [...mockFiles];
+  db.orders = [...mockOrders];
+  db.passportSheets = [...mockPassportSheets];
+  db.printers = [...mockPrinters];
+  db.printQueue = [...mockPrintQueue];
+  db.pricing = { ...defaultPricing };
+  if (typeof window !== "undefined") window.localStorage.removeItem(PERSIST_KEY);
+}
+
 export function delay<T>(value: T, ms = 250): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }
