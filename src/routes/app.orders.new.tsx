@@ -75,8 +75,9 @@ function NewOrderPage() {
     },
     onSuccess: (order) => {
       qc.invalidateQueries({ queryKey: ["orders"] });
-      toast.success("Order placed!");
+      toast.success(payment === "cod" ? "Order placed! Pay on pickup." : "Payment received — order placed!");
       reset();
+      setPayment(null);
       navigate({ to: "/app/orders/$id", params: { id: order.id } });
     },
     onError: () => toast.error("Couldn't place order. Try again."),
