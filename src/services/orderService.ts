@@ -1,4 +1,4 @@
-import { db, delay, uid } from "@/lib/mockDb";
+import { db, delay, persistDb, uid } from "@/lib/mockDb";
 import type { Order, OrderStatus } from "@/types";
 
 export const orderService = {
@@ -19,12 +19,14 @@ export const orderService = {
       updatedAt: now,
     };
     db.orders.unshift(order);
+    persistDb();
     return delay(order, 400);
   },
   async updateStatus(id: string, status: OrderStatus): Promise<Order> {
     const idx = db.orders.findIndex((o) => o.id === id);
     if (idx < 0) throw new Error("Order not found");
     db.orders[idx] = { ...db.orders[idx], status, updatedAt: new Date().toISOString() };
+    persistDb();
     return delay(db.orders[idx], 200);
   },
   async stats(userId?: string) {
@@ -35,6 +37,5 @@ export const orderService = {
     const completed = list.filter((o) => o.status === "completed").length;
     return delay({ active, completed, total: list.length }, 100);
   },
-  // unused but keeps `uid` referenced for future mock writes
   _uid: uid,
 };

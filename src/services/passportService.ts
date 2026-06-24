@@ -1,4 +1,4 @@
-import { db, delay, uid } from "@/lib/mockDb";
+import { db, delay, persistDb, uid } from "@/lib/mockDb";
 import type { PassportSheet } from "@/types";
 
 export const passportService = {
@@ -13,11 +13,15 @@ export const passportService = {
       createdAt: new Date().toISOString(),
     };
     db.passportSheets.unshift(sheet);
+    persistDb();
     return delay(sheet, 300);
   },
   async delete(id: string): Promise<void> {
     const idx = db.passportSheets.findIndex((p) => p.id === id);
-    if (idx >= 0) db.passportSheets.splice(idx, 1);
+    if (idx >= 0) {
+      db.passportSheets.splice(idx, 1);
+      persistDb();
+    }
     return delay(undefined, 150);
   },
 };
