@@ -87,6 +87,13 @@ function NewOrderPage() {
     return true;
   };
 
+  const canSubmit = () => {
+    if (!payment) return false;
+    if (payment === "upi" && !/^[\w.\-]+@[\w]+$/.test(upiId.trim())) return false;
+    if (payment === "card" && cardLast4.replace(/\D/g, "").length < 4) return false;
+    return true;
+  };
+
   return (
     <>
       <PageHeader title="New order" description="Build your order in a few quick steps." />
