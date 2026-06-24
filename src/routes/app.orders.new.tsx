@@ -34,6 +34,9 @@ function NewOrderPage() {
   const qc = useQueryClient();
   const { state, update, step, setStep, reset } = useOrderWizard();
   const { data: pricing } = useQuery({ queryKey: ["pricing"], queryFn: () => pricingService.get() });
+  const [payment, setPayment] = useState<"upi" | "card" | "cod" | null>(null);
+  const [upiId, setUpiId] = useState("");
+  const [cardLast4, setCardLast4] = useState("");
 
   const breakdown = useMemo(() => {
     if (!pricing) return { lines: [], total: 0 };
