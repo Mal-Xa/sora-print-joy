@@ -1,13 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CreditCard, Smartphone, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { WizardStepper } from "@/components/orders/WizardStepper";
 import { FileDropzone } from "@/components/orders/FileDropzone";
 import { PrintOptionsForm } from "@/components/orders/PrintOptionsForm";
@@ -17,7 +19,9 @@ import { useOrderWizard } from "@/hooks/useOrderWizard";
 import { useAuth } from "@/hooks/useAuth";
 import { pricingService } from "@/services/pricingService";
 import { computePriceBreakdown } from "@/lib/pricing";
+import { formatINR } from "@/lib/format";
 import { orderService } from "@/services/orderService";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/orders/new")({
   head: () => ({ meta: [{ title: "New order — Sora Print Hub" }] }),
