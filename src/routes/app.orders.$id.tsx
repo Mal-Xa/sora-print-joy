@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft, FileText, Download } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,6 +9,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { OrderStatusBadge, ORDER_STATUSES, orderStatusLabel } from "@/components/orders/OrderStatusBadge";
 import { orderService } from "@/services/orderService";
 import { formatBytes, formatDateTime, formatINR } from "@/lib/format";
+import { downloadInvoice } from "@/lib/invoice";
 import type { OrderStatus } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +39,21 @@ function OrderDetailsPage() {
       <PageHeader
         title={`Order ${order.id}`}
         description={`Placed on ${formatDateTime(order.createdAt)}`}
-        actions={<OrderStatusBadge status={order.status} />}
+        actions={
+          <div className="flex items-center gap-2">
+            <OrderStatusBadge status={order.status} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                downloadInvoice(order);
+                toast.success("Invoice downloaded");
+              }}
+            >
+              <Download className="mr-2 h-4 w-4" /> Invoice
+            </Button>
+          </div>
+        }
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
