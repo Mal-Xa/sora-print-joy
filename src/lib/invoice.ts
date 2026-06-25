@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import type { Order } from "@/types";
 import { formatDateTime, formatINR } from "@/lib/format";
-import { computePricing } from "@/lib/pricing";
+
 import { db } from "@/lib/mockDb";
 
 const BRAND = "Sora Print Hub";
