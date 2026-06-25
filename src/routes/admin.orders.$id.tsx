@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, FileText, CheckCircle2, Printer as PrinterIcon, PackageCheck, Check } from "lucide-react";
+import { ArrowLeft, FileText, CheckCircle2, Printer as PrinterIcon, PackageCheck, Check, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { orderService } from "@/services/orderService";
 import { formatBytes, formatDateTime, formatINR } from "@/lib/format";
+import { downloadInvoice } from "@/lib/invoice";
 import type { OrderStatus } from "@/types";
 
 export const Route = createFileRoute("/admin/orders/$id")({
