@@ -182,6 +182,16 @@ function AdminOrderDetail() {
                     Force complete
                   </Button>
                 )}
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    downloadInvoice(order);
+                    toast.success("Invoice downloaded");
+                  }}
+                >
+                  <Download className="mr-2 h-4 w-4" /> Download invoice
+                </Button>
               </div>
             </CardContent>
           </Card>
