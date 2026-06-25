@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Eye, File as FileIcon, Plus, Trash2, FolderOpen, Printer } from "lucide-react";
-import { useState } from "react";
+import { CloudUpload, Download, Eye, File as FileIcon, Plus, Trash2, FolderOpen, Printer } from "lucide-react";
+import { useCallback, useState, type DragEvent as ReactDragEvent } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,11 +21,15 @@ import { EmptyState } from "@/components/layout/EmptyState";
 import { useAuth } from "@/hooks/useAuth";
 import { fileService } from "@/services/fileService";
 import { formatBytes, formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/files")({
   head: () => ({ meta: [{ title: "My Files — Sora Print Hub" }] }),
   component: FilesPage,
 });
+
+const ACCEPT = [".pdf", ".docx", ".pptx", ".jpg", ".jpeg", ".png"];
+const ACCEPT_ATTR = "application/pdf,.docx,.pptx,image/jpeg,image/png";
 
 function FilesPage() {
   const { user } = useAuth();
@@ -36,6 +40,7 @@ function FilesPage() {
     enabled: Boolean(user),
   });
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const del = useMutation({
     mutationFn: (id: string) => fileService.delete(id),
@@ -45,17 +50,89 @@ function FilesPage() {
     },
   });
 
+  const upload = useMutation({
+    mutationFn: async (files: File[]) => {
+      if (!user) throw new Error("Not signed in");
+      for (const f of files) await fileService.upload(f, user.id);
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["files"] });
+      toast.success(`${vars.length} file${vars.length === 1 ? "" : "s"} uploaded`);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const acceptFiles = useCallback(
+    (list: FileList | File[]) => {
+      const arr = Array.from(list).filter((f) =>
+        ACCEPT.some((ext) => f.name.toLowerCase().endsWith(ext)),
+      );
+      if (arr.length === 0) {
+        toast.error("Unsupported file type");
+        return;
+      }
+      upload.mutate(arr);
+    },
+    [upload],
+  );
+
+  const onDrop = (e: ReactDragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (e.dataTransfer.files?.length) acceptFiles(e.dataTransfer.files);
+  };
+
   return (
-    <>
+    <div
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragOver(true);
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+        setDragOver(false);
+      }}
+      onDrop={onDrop}
+      className={cn(
+        "relative rounded-2xl transition",
+        dragOver && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+      )}
+    >
       <PageHeader
         title="My files"
-        description="Files you've uploaded for previous orders."
+        description="Drag files anywhere on this page to upload."
         actions={
-          <Button asChild>
-            <Link to="/app/orders/new"><Plus className="mr-2 h-4 w-4" /> Upload</Link>
-          </Button>
+          <div className="flex gap-2">
+            <label>
+              <input
+                type="file"
+                multiple
+                accept={ACCEPT_ATTR}
+                className="sr-only"
+                onChange={(e) => e.target.files && acceptFiles(e.target.files)}
+              />
+              <Button asChild variant="outline">
+                <span className="cursor-pointer">
+                  <CloudUpload className="mr-2 h-4 w-4" /> Upload
+                </span>
+              </Button>
+            </label>
+            <Button asChild>
+              <Link to="/app/orders/new"><Plus className="mr-2 h-4 w-4" /> New order</Link>
+            </Button>
+          </div>
         }
       />
+
+      {dragOver && (
+        <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center rounded-2xl bg-primary/10 backdrop-blur-sm">
+          <div className="rounded-2xl border-2 border-dashed border-primary bg-background px-8 py-6 text-center shadow-lg">
+            <CloudUpload className="mx-auto h-10 w-10 text-primary" />
+            <p className="mt-2 text-base font-semibold">Drop files to upload</p>
+            <p className="text-xs text-muted-foreground">PDF, DOCX, PPTX, JPG, PNG</p>
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -65,8 +142,21 @@ function FilesPage() {
         <EmptyState
           icon={<FolderOpen className="h-5 w-5" />}
           title="No saved files yet"
-          description="When you upload files for an order, they'll appear here."
-          action={<Button asChild><Link to="/app/orders/new">Upload a file</Link></Button>}
+          description="Drag files here or click Upload to add documents."
+          action={
+            <label>
+              <input
+                type="file"
+                multiple
+                accept={ACCEPT_ATTR}
+                className="sr-only"
+                onChange={(e) => e.target.files && acceptFiles(e.target.files)}
+              />
+              <Button asChild>
+                <span className="cursor-pointer">Upload a file</span>
+              </Button>
+            </label>
+          }
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -126,6 +216,6 @@ function FilesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }
